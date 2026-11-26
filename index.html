@@ -1,0 +1,987 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>網路服務互動學習</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+[hidden]{display:none!important}
+body{margin:0}
+html{-webkit-text-size-adjust:100%}
+/* Layout: sticky tab bar over one narrow reading column; the search lab (query turned into labeled chips) is the one bold moment. */
+:root{
+  --bg:#f3f6fa; --surface:#ffffff; --surface2:#eaf0f7; --fg:#142033; --muted:#566678; --line:#d5deea;
+  --accent:#0a6fd6; --accent-ink:#ffffff;
+  --ok:#157a49; --bad:#c13a3a;
+  --c-and:#0a6fd6; --c-phrase:#5b4fcf; --c-not:#c13a3a; --c-or:#b05508; --c-site:#0e7872; --c-file:#ad2f6d;
+  --sans:'Noto Sans TC',system-ui,-apple-system,'PingFang TC','Microsoft JhengHei',sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,'SF Mono',Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0d1520; --surface:#152131; --surface2:#1c2b3f; --fg:#e5ecf4; --muted:#95a6ba; --line:#27374b;
+    --accent:#5aaaff; --accent-ink:#06121f;
+    --ok:#4cc38a; --bad:#ff8080;
+    --c-and:#5aaaff; --c-phrase:#a79cff; --c-not:#ff8080; --c-or:#f2a14e; --c-site:#4fd1c8; --c-file:#ff86bd;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0d1520; --surface:#152131; --surface2:#1c2b3f; --fg:#e5ecf4; --muted:#95a6ba; --line:#27374b;
+  --accent:#5aaaff; --accent-ink:#06121f;
+  --ok:#4cc38a; --bad:#ff8080;
+  --c-and:#5aaaff; --c-phrase:#a79cff; --c-not:#ff8080; --c-or:#f2a14e; --c-site:#4fd1c8; --c-file:#ff86bd;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:16px;line-height:1.75;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 56px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:900px;margin:0 auto}
+header.top{padding:28px 0 18px}
+.eyebrow{font-size:.8rem;font-weight:700;letter-spacing:.08em;color:var(--accent);margin:0}
+h1{font-size:clamp(1.7rem,5.4vw,2.5rem);line-height:1.25;margin:.25em 0 .35em;text-wrap:balance}
+.sub{color:var(--muted);margin:0;max-width:60ch}
+.stats{display:flex;flex-wrap:wrap;gap:8px 28px;margin-top:18px;font-size:.92rem;color:var(--muted)}
+.stats b{color:var(--fg);font-variant-numeric:tabular-nums;font-size:1.15rem;margin-right:.25em}
+nav.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:var(--bg);border-bottom:1px solid var(--line);
+  display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+nav.tabs a{flex:0 0 auto;padding:12px 14px;color:var(--muted);text-decoration:none;font-weight:500;border-bottom:3px solid transparent;white-space:nowrap}
+nav.tabs a:hover{color:var(--fg)}
+nav.tabs a.on{color:var(--fg);border-bottom-color:var(--accent);font-weight:700}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:4px}
+main{padding-top:26px}
+h2{font-size:1.45rem;margin:0 0 .4em;text-wrap:balance}
+h3{font-size:1.08rem;margin:1.4em 0 .4em}
+p{margin:.5em 0}
+.lead{color:var(--muted);margin:0 0 20px;max-width:62ch}
+code,.mono{font-family:var(--mono);font-size:.92em}
+code{background:var(--surface2);padding:.1em .4em;border-radius:4px}
+.k{font-weight:700;background:linear-gradient(transparent 62%,color-mix(in srgb,var(--accent) 24%,transparent) 62%)}
+/* notes */
+details{border-top:1px solid var(--line);padding:4px 0}
+details:last-of-type{border-bottom:1px solid var(--line)}
+summary{cursor:pointer;font-weight:700;font-size:1.1rem;padding:12px 0;list-style:none;display:flex;justify-content:space-between;gap:12px;align-items:center}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";font-family:var(--mono);color:var(--muted);font-size:1.3rem}
+details[open]>summary::after{content:"–"}
+details>div{padding:0 0 18px}
+.tw{overflow-x:auto;margin:10px 0;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:480px;font-size:.93rem;line-height:1.55}
+th,td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--surface2);font-size:.82rem;letter-spacing:.04em;color:var(--muted)}
+tr:last-child td{border-bottom:0}
+ul.tight{padding-left:1.2em;margin:.4em 0}
+ul.tight li{margin:.2em 0}
+.flow{display:flex;flex-wrap:wrap;gap:8px;list-style:none;padding:0;margin:10px 0;counter-reset:s}
+.flow li{counter-increment:s;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:.92rem;flex:1 1 150px}
+.flow li::before{content:counter(s);display:inline-block;width:1.5em;height:1.5em;line-height:1.5em;text-align:center;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:.8rem;font-weight:700;margin-right:.5em}
+.note{border-left:3px solid var(--accent);background:var(--surface2);padding:8px 14px;border-radius:0 8px 8px 0;margin:12px 0;font-size:.95rem}
+/* controls */
+button{font:inherit;cursor:pointer}
+.btn{background:var(--accent);color:var(--accent-ink);border:0;border-radius:8px;padding:9px 18px;font-weight:700}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent;color:var(--fg);border:1px solid var(--line);font-weight:500}
+.btn.ghost:hover{border-color:var(--accent);color:var(--accent);filter:none}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.pill{background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:999px;padding:5px 14px;font-size:.9rem}
+.pill:hover{border-color:var(--accent)}
+.pill.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;margin:16px 0}
+.panel>h3:first-child{margin-top:0}
+input[type=text],input[type=password],select{font:inherit;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:9px 12px;min-width:0}
+input[type=text]:focus,input[type=password]:focus{border-color:var(--accent)}
+label.f{display:block;font-size:.85rem;color:var(--muted);margin-bottom:4px}
+/* search lab */
+.qbox{font-family:var(--mono);font-size:1.15rem;width:100%;padding:14px 16px;border-width:2px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;min-height:44px;margin:14px 0}
+.chip{--k:var(--c-and);display:inline-flex;align-items:baseline;gap:.55em;padding:.3em .65em;border-radius:6px;font-family:var(--mono);font-size:.98rem;
+  background:color-mix(in srgb,var(--k) 12%,var(--surface));border:1px solid color-mix(in srgb,var(--k) 50%,var(--surface));color:var(--fg);overflow-wrap:anywhere}
+.chip i{font-style:normal;font-family:var(--sans);font-size:.72rem;font-weight:700;color:var(--k);letter-spacing:.04em;white-space:nowrap}
+.k-and{--k:var(--c-and)}.k-phrase{--k:var(--c-phrase)}.k-not{--k:var(--c-not)}.k-or{--k:var(--c-or)}.k-site{--k:var(--c-site)}.k-file{--k:var(--c-file)}
+.read{background:var(--surface2);border-radius:8px;padding:12px 16px;font-size:.96rem}
+.read ul{margin:0;padding-left:1.1em}
+.empty{color:var(--muted);font-size:.93rem;margin:0}
+.chal{border-top:1px solid var(--line);padding:16px 0}
+.chal:first-of-type{border-top:0}
+.chal .goal{font-weight:700;margin:0 0 8px}
+.chal .row input{flex:1 1 240px;font-family:var(--mono)}
+.res{margin:8px 0 0;font-size:.93rem}
+.res.ok{color:var(--ok);font-weight:700}
+.res.no{color:var(--bad)}
+.res ul{margin:.3em 0 0;padding-left:1.2em;color:var(--fg);font-weight:400}
+.ans{font-family:var(--mono);font-size:.9rem;color:var(--muted)}
+/* mail lab */
+.parts{display:flex;flex-wrap:wrap;align-items:stretch;gap:0;margin:12px 0;font-family:var(--mono);font-size:1.05rem}
+.parts span{padding:8px 12px;border:1px solid var(--line);background:var(--surface2);overflow-wrap:anywhere}
+.parts span small{display:block;font-family:var(--sans);font-size:.72rem;color:var(--muted);font-weight:700;letter-spacing:.04em}
+.parts .at{background:var(--accent);color:var(--accent-ink);display:flex;align-items:center;font-weight:700}
+.checks{list-style:none;padding:0;margin:8px 0 0;font-size:.93rem}
+.checks li{display:flex;gap:8px;padding:2px 0}
+.checks .y{color:var(--ok);font-weight:700}
+.checks .n{color:var(--bad);font-weight:700}
+.verdict{font-weight:700;margin-top:6px}
+.who{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin:10px 0}
+.who div{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 12px}
+.mailbox{border:1px solid var(--line);border-radius:8px;background:var(--bg);padding:12px 16px;font-size:.95rem}
+.mailbox dl{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:0}
+.mailbox dt{color:var(--muted);font-weight:700}
+.mailbox dd{margin:0;overflow-wrap:anywhere}
+.warn{color:var(--bad);font-weight:700}
+.pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+.mini{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px}
+.mini p{margin:0 0 8px;font-size:.95rem}
+.mini .row{gap:6px}
+.mini .btn{padding:5px 12px;font-size:.88rem}
+.mini.right{border-color:var(--ok)}
+.mini.wrong{border-color:var(--bad)}
+.mini .tip{font-size:.85rem;color:var(--muted);margin:8px 0 0}
+/* flashcards */
+.deckbar{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center;margin-bottom:12px}
+.card{display:block;width:100%;min-height:230px;text-align:center;background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:14px;padding:28px 22px;
+  display:flex;flex-direction:column;justify-content:center;align-items:center;gap:10px;font-size:1.1rem}
+.card:hover{border-color:var(--accent)}
+.card .term{font-size:clamp(1.4rem,5vw,2rem);font-weight:700;text-wrap:balance}
+.card .def{font-size:1.1rem;max-width:34em;text-wrap:pretty}
+.card .hint{font-size:.8rem;color:var(--muted);letter-spacing:.06em}
+.card .tg{font-size:.78rem;color:var(--accent);font-weight:700;letter-spacing:.06em}
+.card.back{background:var(--surface2)}
+.deckfoot{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:12px}
+/* quiz */
+.qhead{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:.88rem;color:var(--muted)}
+.bar{height:6px;background:var(--surface2);border-radius:3px;margin:8px 0 18px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent)}
+.qtext{font-size:1.15rem;font-weight:500;white-space:pre-line;margin:0 0 14px}
+.opts{display:grid;gap:8px}
+.opt{display:flex;gap:12px;text-align:left;align-items:baseline;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:11px 14px;overflow-wrap:anywhere}
+.opt b{font-family:var(--mono);color:var(--muted);flex:0 0 1.2em}
+.opt:hover:not([disabled]){border-color:var(--accent)}
+.opt.good{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 14%,var(--bg))}
+.opt.bad{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 13%,var(--bg))}
+.opt[disabled]{cursor:default}
+.fb{margin-top:14px;padding:12px 16px;border-radius:8px;background:var(--surface2);font-size:.96rem}
+.fb strong.g{color:var(--ok)}.fb strong.b{color:var(--bad)}
+.setup{display:grid;gap:18px}
+.score{font-size:3rem;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
+.userbar{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:flex-end;font-size:.9rem;color:var(--muted);margin-bottom:6px}
+.userbar b{color:var(--fg);font-family:var(--mono)}
+.userbar .btn{padding:4px 12px;font-size:.85rem}
+.linkbtn{background:none;border:0;color:var(--accent);padding:0;text-decoration:underline;font:inherit}
+#login{max-width:480px;margin:10px 0 0}
+#login .row input{flex:1 1 200px}
+.tsum{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0}
+.tsum div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+.tsum b{display:block;font-size:1.6rem;font-variant-numeric:tabular-nums;line-height:1.3}
+.tsum span{font-size:.82rem;color:var(--muted)}
+.sortb{background:none;border:0;font:inherit;font-weight:700;color:inherit;padding:0;letter-spacing:inherit;font-size:inherit}
+.mbar{display:inline-block;width:70px;height:8px;border-radius:4px;background:var(--surface2);vertical-align:middle;margin-right:8px;overflow:hidden}
+.mbar i{display:block;height:100%;background:var(--accent)}
+.low{color:var(--bad);font-weight:700}
+.num{font-variant-numeric:tabular-nums}
+.missrow{display:flex;justify-content:space-between;gap:14px;padding:8px 0;border-top:1px solid var(--line);font-size:.95rem}
+.missrow span:last-child{white-space:nowrap;color:var(--muted)}
+@media (prefers-reduced-motion:no-preference){.chip,.opt,.card{transition:border-color .15s,background .15s}}
+@media (max-width:520px){.panel{padding:14px}.mailbox dl{grid-template-columns:1fr}.mailbox dd{margin-bottom:6px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div class="userbar" id="userbar" hidden><span>學號 <b id="whoId"></b></span><span id="syncState"></span><button class="btn ghost" id="logout" type="button">登出</button></div>
+  <p class="eyebrow">數位科技概論 · 統測單元 5 · 第 10 章</p>
+  <h1>網路服務互動學習</h1>
+  <p class="sub">WWW、搜尋語法、電子郵件、檔案傳輸、數位內容。先看重點，再用實驗室動手試，最後用歷屆題檢查。</p>
+  <div class="stats" id="stats" aria-live="polite" hidden>
+    <span><b id="stAcc">–</b>測驗正確率</span>
+    <span><b id="stAns">0</b>已作答題數</span>
+    <span><b id="stCards">0</b>已記住閃卡</span>
+  </div>
+</header>
+
+<section id="login" class="panel">
+  <div id="stuLogin">
+    <h2>輸入學號開始</h2>
+    <p class="lead" style="margin-bottom:14px">用學號進入，進度會自動儲存。換裝置輸入同一個學號就能接著做。</p>
+    <form id="stuForm" novalidate>
+      <label class="f" for="sid">學號</label>
+      <div class="row"><input type="text" id="sid" maxlength="20" autocomplete="off" autocapitalize="characters" placeholder="例如 110123"><button class="btn" type="submit">進入</button></div>
+      <p class="res no" id="sidErr" aria-live="polite"></p>
+    </form>
+    <p class="empty" style="margin-top:14px"><button class="linkbtn" id="toTeacher" type="button">老師登入</button></p>
+  </div>
+  <div id="tLogin" hidden>
+    <h2>老師登入</h2>
+    <form id="tForm" novalidate>
+      <label class="f" for="tpw">密碼</label>
+      <div class="row"><input type="password" id="tpw" autocomplete="current-password"><button class="btn" type="submit">登入</button></div>
+      <p class="res no" id="tErr" aria-live="polite"></p>
+    </form>
+    <p class="empty" style="margin-top:14px"><button class="linkbtn" id="toStudent" type="button">回學生入口</button></p>
+  </div>
+</section>
+
+<section id="teacher" hidden>
+  <div class="row" style="justify-content:space-between;margin-bottom:6px">
+    <h2 style="margin:0">老師後台</h2>
+    <div class="row"><button class="btn ghost" id="tRefresh" type="button">重新整理</button><button class="btn ghost" id="tCsv" type="button">匯出 CSV</button><button class="btn ghost" id="tOut" type="button">登出</button></div>
+  </div>
+  <p class="empty" id="tMsg" aria-live="polite"></p>
+  <div class="tsum" id="tSum"></div>
+  <div class="tw"><table id="tTable"></table></div>
+  <h3>最多人答錯的題目</h3>
+  <div id="tMiss"></div>
+</section>
+
+<div id="app" hidden>
+<nav class="tabs" aria-label="學習項目">
+  <a href="#notes">重點整理</a>
+  <a href="#search">搜尋實驗室</a>
+  <a href="#mail">郵件實驗室</a>
+  <a href="#cards">閃卡</a>
+  <a href="#quiz">測驗</a>
+</nav>
+
+<main>
+<!-- ============ NOTES ============ -->
+<section data-view="notes">
+  <h2>重點整理</h2>
+  <p class="lead">依講義章節整理。點標題展開，帶有底線標記的是常考關鍵字。</p>
+
+  <details open>
+    <summary>全球資訊網與瀏覽器</summary>
+    <div>
+      <ul class="tight">
+        <li><span class="k">WWW</span> 由許多<span class="k">網站</span>組成；網站是<span class="k">網頁</span>的集合，進入網站的第一個網頁叫<span class="k">首頁</span>（homepage）。</li>
+        <li><span class="k">瀏覽器</span>是瀏覽 WWW 網頁的工具。游標移到超連結上會變成手指形狀。</li>
+      </ul>
+      <div class="tw"><table>
+        <tr><th>瀏覽器</th><th>廠商</th><th>說明</th></tr>
+        <tr><td>Microsoft Edge</td><td>Microsoft</td><td>Windows 10 內建</td></tr>
+        <tr><td>Firefox</td><td>Mozilla</td><td>自由軟體</td></tr>
+        <tr><td>Chrome</td><td>Google</td><td>免費軟體</td></tr>
+        <tr><td>Safari</td><td>Apple</td><td>macOS 內建；iPhone 內建的也是 Safari</td></tr>
+        <tr><td>Opera</td><td>Opera</td><td>免費軟體</td></tr>
+      </table></div>
+      <p><b>瀏覽網頁的過程</b></p>
+      <ol class="flow">
+        <li>在瀏覽器輸入網址</li>
+        <li>瀏覽器依網址向伺服器發出請求</li>
+        <li>伺服器找到網頁，將資料傳回</li>
+        <li>瀏覽器解讀資料並顯示在螢幕</li>
+      </ol>
+      <p><b>瀏覽器安全性設定</b></p>
+      <div class="tw"><table>
+        <tr><th>項目</th><th>說明</th></tr>
+        <tr><td>存取 Cookie</td><td>Cookie 是網站記錄的使用者瀏覽資訊，可限制網站存取</td></tr>
+        <tr><td>下載外掛程式</td><td>外掛程式是安裝在瀏覽器上擴充功能的程式，可決定是否安裝</td></tr>
+        <tr><td>執行程式碼</td><td>網頁程式碼可增加效果與功能，可設定是否執行</td></tr>
+        <tr><td>顯示彈出式視窗</td><td>用於顯示廣告、認證等額外訊息，可選擇封鎖</td></tr>
+        <tr><td>安全性</td><td>調整安全設定可降低網路威脅風險</td></tr>
+      </table></div>
+      <p class="note">瀏覽器的安全設定可以限制 Cookie、外掛、程式碼、彈出視窗，但不會「自動設定防火牆」（109 商管群考過）。</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>入口網站與資料搜尋</summary>
+    <div>
+      <ul class="tight">
+        <li><span class="k">入口網站</span>（portal site）分類蒐集許多網頁資料方便查詢，通常有<span class="k">搜尋引擎</span>功能。例：Yahoo!奇摩、PChome Online 網路家庭、yam 蕃薯藤、MSN 台灣。</li>
+        <li>專門的搜尋引擎網站：Google、Bing。不同搜尋引擎的結果可能略有不同。</li>
+        <li>專用搜尋：影片 YouTube；圖片 Flickr、Pixabay；電子地圖 Google 地圖、UrMap；以圖找圖 Google 圖片、TinEye。</li>
+        <li>維基百科（Wikipedia）是全球網友協同創作的知識網站。</li>
+      </ul>
+      <div class="tw"><table>
+        <tr><th>搜尋語法</th><th>意義</th><th>範例</th></tr>
+        <tr><td>NOT（減號 <code>-</code>）</td><td>不包含某關鍵字</td><td><code>資訊展 -高雄</code></td></tr>
+        <tr><td>AND（空白）</td><td>同時包含 2 個以上關鍵字</td><td><code>台北資訊展 時間</code></td></tr>
+        <tr><td>OR</td><td>符合任一關鍵字即可</td><td><code>台北資訊展 OR 台北資訊月</code></td></tr>
+        <tr><td><code>" "</code></td><td>必須完全符合</td><td><code>"11月資訊展"</code></td></tr>
+        <tr><td><code>site:</code></td><td>指定在特定網域搜尋</td><td><code>site:gov 資訊展</code></td></tr>
+        <tr><td><code>filetype:</code></td><td>只搜尋特定檔案類型</td><td><code>考古題 filetype:pdf</code></td></tr>
+      </table></div>
+      <p class="note">結果數量：<b>OR 最多</b>，條件越多越少，<b>"完整比對" 最少</b>（歷屆題常考排序）。到「搜尋實驗室」親手試。</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>電子郵件</summary>
+    <div>
+      <p>地址格式：<span class="k">使用者帳號@郵件伺服器位址</span>，例 <code>jameschen@yahoo.com.tw</code>，其中 @ 念 at，地址中不可含空白。</p>
+      <div class="tw"><table>
+        <tr><th>通訊協定</th><th>功能</th><th>特色</th></tr>
+        <tr><td>SMTP</td><td>寄信</td><td>外寄郵件伺服器；伺服器之間寄送郵件也用它</td></tr>
+        <tr><td>POP3</td><td>收信</td><td>將伺服器上所有郵件下載到電腦</td></tr>
+        <tr><td>IMAP</td><td>收信</td><td>郵件一直留在伺服器，可先看寄件者與主旨再決定是否下載</td></tr>
+      </table></div>
+      <ul class="tight">
+        <li><span class="k">迴紋針</span>符號：郵件含有附加檔案。</li>
+        <li><span class="k">副本</span>：讓相關的人也收到，所有收件者都看得到。</li>
+        <li><span class="k">密件副本</span>：隱藏該收件者的名稱與地址，其他人看不到，達到知會與保密。</li>
+        <li>收件者、副本、密件副本至少要有 1 位收件者才能寄出。</li>
+        <li><span class="k">Re:</span> 是回信，<span class="k">Fw:</span> 是轉寄。</li>
+        <li>通訊錄記錄聯絡人地址，省去每次輸入。</li>
+        <li>首次使用郵件軟體要設定：帳戶、內收伺服器（POP3 / IMAP）、外寄伺服器（SMTP）、帳號密碼。</li>
+        <li>垃圾郵件（spam）：收件者不想收到的郵件，如廣告信。</li>
+      </ul>
+      <div class="tw"><table>
+        <tr><th></th><th>優點</th><th>缺點</th></tr>
+        <tr><td>電子郵件軟體<br>（Outlook、Thunderbird）</td><td>可離線閱讀；易於管理與保存</td><td>換電腦要重建帳號與通訊錄；郵件存在電腦，佔硬碟</td></tr>
+        <tr><td>網路電子信箱<br>（Gmail、Yahoo!奇摩）</td><td>任何可上網的電腦都能收發；郵件存在網路上，不佔硬碟</td><td>要連線才能閱讀；免費空間由業者決定</td></tr>
+      </table></div>
+      <div class="tw"><table>
+        <tr><th>網路信箱</th><th>空間</th></tr>
+        <tr><td>Yahoo!奇摩電子信箱</td><td>1TB</td></tr>
+        <tr><td>Outlook.com</td><td>15GB</td></tr>
+        <tr><td>Gmail</td><td>與 Google 雲端硬碟、相簿共用 15GB</td></tr>
+      </table></div>
+    </div>
+  </details>
+
+  <details>
+    <summary>其他資訊傳遞應用</summary>
+    <div>
+      <div class="tw"><table>
+        <tr><th>應用</th><th>說明</th><th>例</th></tr>
+        <tr><td>即時通訊 IM</td><td>即時訊息、視訊語音、檔案分享</td><td>LINE、WeChat、Messenger</td></tr>
+        <tr><td>社群網站</td><td>心情、打卡、相簿、直播等，發送給好友或大眾</td><td>Instagram、Facebook、TikTok、Dcard、Threads</td></tr>
+        <tr><td>部落格 blog</td><td>個人化生活記錄網站，網友可留言討論</td><td>痞客邦、udn 部落格</td></tr>
+        <tr><td>微型網誌</td><td>簡短訊息，通常限制 200 字內</td><td>微博、X（推特）</td></tr>
+        <tr><td>BBS</td><td>多主題討論看板</td><td>批踢踢實業坊</td></tr>
+      </table></div>
+      <ul class="tight">
+        <li><span class="k">六度分隔理論</span>：2 個互不認識的人，透過週遭 6 個人的關係就會產生關聯，社群網站是它的實踐。</li>
+        <li>連 BBS：終端機模擬軟體（PCMan、Welly），或在命令提示字元用 <code>telnet</code>。</li>
+        <li>VoIP 網路電話軟體：Skype。</li>
+      </ul>
+    </div>
+  </details>
+
+  <details>
+    <summary>檔案傳輸</summary>
+    <div>
+      <div class="tw"><table>
+        <tr><th>方式</th><th>工具</th><th>特色</th></tr>
+        <tr><td>HTTP</td><td>瀏覽器</td><td>下載未完成就斷線，必須重新下載</td></tr>
+        <tr><td>FTP</td><td>瀏覽器或 FTP 軟體（CuteFTP、FileZilla）</td><td>要帳號密碼；有些站提供匿名帳號 Anonymous 免輸入</td></tr>
+        <tr><td>P2P 點對點</td><td>eMule、BitComet、Send Anywhere</td><td>不經特定伺服器；多點對多點，分享的電腦越多越快</td></tr>
+      </table></div>
+      <p class="note">P2P 風險：感染惡意軟體、侵犯著作權、隱私外洩（例如不小心分享報稅資料）。</p>
+      <p><b>雲端硬碟</b>：用業者提供的空間存放檔案，可在不同地點、不同裝置分享與編輯。全家規劃旅行時，把行程檔上傳雲端硬碟並分享連結，家人可跨裝置即時查看與編輯（115 商管群）。</p>
+      <div class="tw"><table>
+        <tr><th>網站</th><th>可用空間</th></tr>
+        <tr><td>MEGA</td><td>20 GB</td></tr>
+        <tr><td>Google 雲端硬碟</td><td>15 GB</td></tr>
+        <tr><td>Microsoft OneDrive</td><td>5 GB</td></tr>
+        <tr><td>Dropbox</td><td>2 GB</td></tr>
+      </table></div>
+    </div>
+  </details>
+
+  <details>
+    <summary>數位內容</summary>
+    <div>
+      <p><span class="k">數位內容</span>：利用資訊科技把文字、圖像、影像、語音等多媒體內容數位化並整合而成的產品或服務。使用時要遵守著作權規範。</p>
+      <div class="tw"><table>
+        <tr><th>類型</th><th>重點與例子</th></tr>
+        <tr><td>電子書</td><td>手機、平板、閱讀器閱讀；省紙張與空間；可呈現動態多媒體。Kindle、Readmoo、樂天 kobo、博客來</td></tr>
+        <tr><td>數位影像</td><td>手機、數位相機、掃描器取得；Pixabay、Flickr、iStock；網路相簿 Google 相簿</td></tr>
+        <tr><td>數位音樂</td><td>KKBOX、Spotify、Apple Music、freesound、Musopen</td></tr>
+        <tr><td>數位影片</td><td>電腦動畫是其中一種；YouTube、Netflix、LINE TV</td></tr>
+        <tr><td>數位學習</td><td>ewant 育網、MOOCs 磨課師、均一教育平台</td></tr>
+        <tr><td>數位遊戲</td><td>電腦：Steam；手機：Play 商店、App Store；遊戲機：Switch、PS5</td></tr>
+      </table></div>
+      <p><b>電子墨水（E Ink）</b>電子紙：較不反光、低耗電、太陽下可閱讀（如 Kindle）。</p>
+      <div class="tw"><table>
+        <tr><th>電子書格式</th><th>特色</th></tr>
+        <tr><td>txt、html、chm、docx</td><td>用電腦閱讀常見的格式</td></tr>
+        <tr><td>pdf</td><td>保留文件原貌，支援中文直排；檔案大、翻頁慢</td></tr>
+        <tr><td>ePub</td><td>電子書廠商最常用；新版可嵌入影音</td></tr>
+        <tr><td>azw、mobi、azw3</td><td>Amazon 專用；azw 版權保護比 mobi 齊全；azw3 以 mobi 為基礎，是目前主要格式</td></tr>
+      </table></div>
+    </div>
+  </details>
+</section>
+
+<!-- ============ SEARCH LAB ============ -->
+<section data-view="search" hidden>
+  <h2>搜尋實驗室</h2>
+  <p class="lead">輸入一串搜尋字串，下方會拆成標籤並用白話說明搜尋什麼。</p>
+
+  <div class="panel">
+    <label class="f" for="sq">搜尋字串</label>
+    <input type="text" id="sq" class="qbox" value='台北資訊展 -高雄 site:gov.tw' autocomplete="off" spellcheck="false">
+    <div class="row" style="margin-top:10px" id="presets"></div>
+    <div class="chips" id="chips" aria-live="polite"></div>
+    <div class="read" id="read"></div>
+  </div>
+
+  <div class="panel">
+    <h3>挑戰：寫出符合需求的搜尋字串</h3>
+    <div id="chals"></div>
+  </div>
+</section>
+
+<!-- ============ MAIL LAB ============ -->
+<section data-view="mail" hidden>
+  <h2>郵件實驗室</h2>
+  <p class="lead">檢查地址格式、玩收件者／副本／密件副本，再把協定和收信工具配對。</p>
+
+  <div class="panel">
+    <h3>1. 電子郵件地址檢查器</h3>
+    <label class="f" for="addr">輸入地址</label>
+    <input type="text" id="addr" class="mono" style="width:100%" value="lee643@nfu.edu.tw" autocomplete="off" spellcheck="false">
+    <div class="row" style="margin-top:10px" id="addrPresets"></div>
+    <div class="parts" id="parts" aria-live="polite"></div>
+    <ul class="checks" id="checks"></ul>
+    <div class="verdict" id="verdict"></div>
+  </div>
+
+  <div class="panel">
+    <h3>2. 誰看得到誰？</h3>
+    <p class="empty" style="margin-bottom:8px">大明寄信，替每位收件者選擇欄位，再切換成不同人的角度看信件標頭。</p>
+    <div class="who" id="who"></div>
+    <label class="f" style="margin-top:12px">用誰的角度看</label>
+    <div class="row" id="viewer" role="radiogroup" aria-label="檢視角度"></div>
+    <div class="mailbox" style="margin-top:12px" id="mailbox"></div>
+    <p id="mailnote" style="margin-top:10px;font-size:.95rem"></p>
+  </div>
+
+  <div class="panel">
+    <h3>3. 通訊協定配對</h3>
+    <div class="pair" id="protos"></div>
+  </div>
+
+  <div class="panel">
+    <h3>4. 郵件軟體 還是 網路電子信箱？</h3>
+    <div class="pair" id="tools"></div>
+  </div>
+</section>
+
+<!-- ============ CARDS ============ -->
+<section data-view="cards" hidden>
+  <h2>閃卡</h2>
+  <p class="lead">點卡片翻面。按「記住了」會從待複習牌組移除，進度存在這台瀏覽器。</p>
+  <div class="deckbar">
+    <div class="row" id="cardFilter">
+      <button class="pill on" data-f="todo">待複習</button>
+      <button class="pill" data-f="all">全部</button>
+    </div>
+    <div class="row">
+      <span id="cardCount" class="empty"></span>
+      <button class="btn ghost" data-act="shuffle">洗牌</button>
+    </div>
+  </div>
+  <div id="cardArea"></div>
+</section>
+
+<!-- ============ QUIZ ============ -->
+<section data-view="quiz" hidden>
+  <h2>測驗</h2>
+  <p class="lead">題目取自講義的練習題與歷屆統測。答完立刻看解析。</p>
+  <div class="panel" id="quizBox"></div>
+</section>
+</main>
+</div>
+</div>
+</div>
+
+<script>
+var API_URL='https://script.google.com/macros/s/xxxxxxxx/exec';
+/* 部署 Apps Script 後，把網頁應用程式網址（/exec 結尾）貼在引號內 */
+var API_URL='';
+(function(){
+'use strict';
+var $=function(s,r){return (r||document).querySelector(s)};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+var esc=function(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})};
+
+/* ---------- storage: local cache + Apps Script sync ---------- */
+var store={cards:{},q:{}},SID='',syncT=null;
+function lsKey(){return 'net10-study-'+SID}
+function readLocal(){var s={cards:{},q:{}};try{var raw=localStorage.getItem(lsKey());if(raw){var o=JSON.parse(raw);if(o&&typeof o==='object'){s.cards=o.cards||{};s.q=o.q||{}}}}catch(e){}return s}
+function setSync(t){var el=$('#syncState');if(el)el.textContent=t}
+function api(body){return fetch(API_URL,{method:'POST',body:JSON.stringify(body)}).then(function(r){return r.json()})}
+function doSync(){
+  syncT=null;if(!API_URL||!SID)return;
+  api({action:'save',id:SID,data:store}).then(function(r){setSync(r&&r.ok?'進度已同步':'同步失敗，稍後再試')}).catch(function(){setSync('目前離線，進度先存在本機')});
+}
+function schedSync(){if(!API_URL||!SID)return;clearTimeout(syncT);setSync('同步中…');syncT=setTimeout(doSync,1200)}
+function save(){try{localStorage.setItem(lsKey(),JSON.stringify(store))}catch(e){}schedSync()}
+
+var TOPICS={www:'瀏覽器與 WWW',search:'搜尋語法',mail:'電子郵件',app:'資訊傳遞應用',file:'檔案傳輸',content:'數位內容'};
+
+/* ---------- routing ---------- */
+var VIEWS=['notes','search','mail','cards','quiz'];
+function route(){
+  var h=location.hash.replace('#','');if(VIEWS.indexOf(h)<0)h='notes';
+  $$('[data-view]').forEach(function(s){s.hidden=s.dataset.view!==h});
+  $$('nav.tabs a').forEach(function(a){var on=a.getAttribute('href')==='#'+h;a.classList.toggle('on',on);if(on)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')});
+  window.scrollTo(0,0);
+}
+window.addEventListener('hashchange',route);
+
+/* ---------- search lab ---------- */
+var LABEL={and:'AND 必含',phrase:'完整比對',not:'NOT 排除',or:'OR 任一',site:'網域',file:'檔案類型'};
+function parseQ(raw){
+  var s=raw.replace(/[“”＂]/g,'"'),re=/"([^"]*)"|(\S+)/g,m,items=[],orNext=false,mm;
+  while((m=re.exec(s))){
+    if(m[1]!==undefined){if(m[1].trim()){items.push({kind:'phrase',text:m[1].trim(),orPrev:orNext});orNext=false}continue}
+    var t=m[2];
+    if(t==='OR'||t==='|'){orNext=items.length>0;continue}
+    if(t==='AND'){continue}
+    if((mm=t.match(/^-(.+)$/))){items.push({kind:'not',text:mm[1].replace(/"/g,'')});orNext=false;continue}
+    if((mm=t.match(/^site:(.+)$/i))){items.push({kind:'site',text:mm[1],orPrev:orNext});orNext=false;continue}
+    if((mm=t.match(/^filetype:(.+)$/i))){items.push({kind:'file',text:mm[1]});orNext=false;continue}
+    items.push({kind:'and',text:t.replace(/"/g,''),orPrev:orNext});orNext=false;
+  }
+  var groups=[];
+  items.forEach(function(it,i){
+    if(it.orPrev&&i>0&&items[i-1].kind!=='not'&&items[i-1].kind!=='file'){
+      var prev=items[i-1];if(!prev.g){prev.g=[prev];groups.push(prev.g)}prev.g.push(it);it.g=prev.g;
+    }
+  });
+  items.forEach(function(it){it.k2=it.g?'or':it.kind});
+  return {items:items,groups:groups};
+}
+function q_(it){return it.kind==='phrase'?'「'+it.text+'」':it.text}
+function reading(p){
+  var L=[],pick=function(k){return p.items.filter(function(i){return i.k2===k})};
+  var and=pick('and'),ph=pick('phrase'),nt=pick('not'),st=pick('site'),fl=pick('file');
+  if(and.length)L.push('同時包含：'+and.map(function(i){return esc(i.text)}).join('、'));
+  if(ph.length)L.push('完整出現（連在一起、順序相同）：'+ph.map(function(i){return '「'+esc(i.text)+'」'}).join('、'));
+  p.groups.forEach(function(g){L.push('下列任一個即可：'+g.map(function(i){return esc(q_(i))}).join(' 或 '))});
+  if(nt.length)L.push('排除含有「'+nt.map(function(i){return esc(i.text)}).join('」「')+'」的網頁');
+  if(st.length)L.push('只在 '+st.map(function(i){return '<code>'+esc(i.text)+'</code>'}).join('、')+' 網域內找');
+  if(fl.length)L.push('只找 '+fl.map(function(i){return '<b>'+esc(i.text.toUpperCase())+'</b>'}).join('、')+' 檔案');
+  return L;
+}
+function renderSearch(){
+  var v=$('#sq').value,p=parseQ(v),chips=$('#chips'),rd=$('#read');
+  if(!p.items.length){chips.innerHTML='';rd.innerHTML='<p class="empty">輸入關鍵字開始，例如 <code>資訊展 -高雄</code>。</p>';return}
+  chips.innerHTML=p.items.map(function(it){return '<span class="chip k-'+it.k2+'"><i>'+LABEL[it.k2]+'</i>'+esc(it.kind==='site'?'site:'+it.text:it.kind==='file'?'filetype:'+it.text:it.kind==='not'?'-'+it.text:it.text)+'</span>'}).join('');
+  rd.innerHTML='<ul>'+reading(p).map(function(l){return '<li>'+l+'</li>'}).join('')+'</ul>';
+}
+var PRESETS=['資訊展 -高雄','台北資訊展 OR 台北資訊月','"11月資訊展"','site:gov 資訊展','考古題 filetype:pdf','台北資訊展 時間'];
+$('#presets').innerHTML=PRESETS.map(function(x,i){return '<button class="pill" data-p="'+i+'">'+esc(x)+'</button>'}).join('');
+$('#presets').addEventListener('click',function(e){var b=e.target.closest('[data-p]');if(!b)return;$('#sq').value=PRESETS[+b.dataset.p];renderSearch()});
+$('#sq').addEventListener('input',renderSearch);
+
+function facts(p){
+  var inc=[],phr=[];
+  p.items.forEach(function(i){if(i.kind==='and'||i.kind==='phrase')inc.push(i.text.toLowerCase());if(i.kind==='phrase')phr.push(i.text.toLowerCase())});
+  return {
+    inc:inc,phr:phr,
+    nots:p.items.filter(function(i){return i.kind==='not'}).map(function(i){return i.text.toLowerCase()}),
+    site:p.items.filter(function(i){return i.kind==='site'}).map(function(i){return i.text.toLowerCase()}),
+    file:p.items.filter(function(i){return i.kind==='file'}).map(function(i){return i.text.toLowerCase()}),
+    groups:p.groups.map(function(g){return g.map(function(i){return i.text.toLowerCase()})}),
+    n:p.items.length
+  };
+}
+var has=function(a,x){return a.indexOf(x)>=0};
+var CH=[
+ {g:'找出完整詞「資訊科技」的網頁，並剔除含「公司」的網頁。',ex:'"資訊科技" -"公司"',
+  chk:function(f){var h=[];if(!has(f.phr,'資訊科技'))h.push('「資訊科技」要用雙引號包起來才是完整比對');if(!has(f.nots,'公司'))h.push('排除「公司」要在前面加減號 <code>-</code>');return h}},
+ {g:'只在 mycookie.idv.tw 網域找「紅絲絨蛋糕」，不要含「麵包」。',ex:'紅絲絨蛋糕 -麵包 site:mycookie.idv.tw',
+  chk:function(f){var h=[];if(!has(f.inc,'紅絲絨蛋糕'))h.push('要有關鍵字「紅絲絨蛋糕」');if(!has(f.nots,'麵包'))h.push('用 <code>-麵包</code> 排除麵包');if(!has(f.site,'mycookie.idv.tw'))h.push('用 <code>site:mycookie.idv.tw</code> 限定網域');return h}},
+ {g:'找內容含「計算機概論考古題」、不含「解答」的 PDF 檔。',ex:'計算機概論考古題 -解答 filetype:pdf',
+  chk:function(f){var h=[];if(!has(f.inc,'計算機概論考古題'))h.push('要有關鍵字「計算機概論考古題」');if(!has(f.nots,'解答'))h.push('用 <code>-解答</code> 排除解答');if(!has(f.file,'pdf'))h.push('用 <code>filetype:pdf</code> 限定檔案類型');return h}},
+ {g:'找「台北資訊展」或「台北資訊月」，符合任一個就好。',ex:'台北資訊展 OR 台北資訊月',
+  chk:function(f){var h=[];var ok=f.groups.some(function(g){return has(g,'台北資訊展')&&has(g,'台北資訊月')});if(!ok)h.push('兩個詞中間放大寫的 <code>OR</code>，且 OR 前後各要有空白');return h}},
+ {g:'找同時討論「瑪利歐」與「寶可夢」的網頁。',ex:'瑪利歐 寶可夢',
+  chk:function(f){var h=[];if(!has(f.inc,'瑪利歐')||!has(f.inc,'寶可夢'))h.push('兩個關鍵字都要出現，中間用空白隔開');if(f.groups.length||f.nots.length)h.push('這題不需要 OR 或排除');return h}},
+ {g:'只在政府網站（gov）找「資訊展」，並排除「高雄」。',ex:'site:gov 資訊展 -高雄',
+  chk:function(f){var h=[];if(!has(f.site,'gov'))h.push('用 <code>site:gov</code> 限定政府網域');if(!has(f.inc,'資訊展'))h.push('要有關鍵字「資訊展」');if(!has(f.nots,'高雄'))h.push('用 <code>-高雄</code> 排除高雄');return h}}
+];
+$('#chals').innerHTML=CH.map(function(c,i){
+  return '<div class="chal"><p class="goal">'+(i+1)+'. '+esc(c.g)+'</p><div class="row"><input type="text" id="ch'+i+'" placeholder="在這裡輸入搜尋字串" autocomplete="off" spellcheck="false"><button class="btn" data-chk="'+i+'">檢查</button><button class="btn ghost" data-show="'+i+'">看範例</button></div><div class="res" id="cr'+i+'" aria-live="polite"></div></div>';
+}).join('');
+$('#chals').addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b)return;
+  if(b.dataset.chk!==undefined){
+    var i=+b.dataset.chk,v=$('#ch'+i).value,r=$('#cr'+i);
+    if(!v.trim()){r.className='res no';r.textContent='先輸入搜尋字串。';return}
+    var h=CH[i].chk(facts(parseQ(v)));
+    if(!h.length){r.className='res ok';r.textContent='✓ 正確'}
+    else{r.className='res no';r.innerHTML='還差一點：<ul>'+h.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul>'}
+  }else if(b.dataset.show!==undefined){
+    var j=+b.dataset.show,r2=$('#cr'+j);r2.className='res';r2.innerHTML='範例：<span class="ans">'+esc(CH[j].ex)+'</span>';
+  }
+});
+$('#chals').addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.tagName==='INPUT'){var b=e.target.parentNode.querySelector('[data-chk]');if(b)b.click()}});
+
+/* ---------- mail lab ---------- */
+function checkAddr(a){
+  var at=(a.match(/@/g)||[]).length,i=a.indexOf('@'),user=i>=0?a.slice(0,i):a,server=i>=0?a.slice(i+1):'';
+  var c=[
+    ['恰好有一個 @',at===1],
+    ['不含空白字元',!/\s/.test(a)],
+    ['@ 前面有使用者帳號',at===1&&user.length>0],
+    ['@ 後面是郵件伺服器位址（含網域點）',at===1&&server.indexOf('.')>0&&!/\.$/.test(server)],
+    ['帳號只用英數字、底線、點、減號（不含 $ # & 等符號）',user.length>0&&/^[A-Za-z0-9._-]+$/.test(user)]
+  ];
+  return {user:user,server:server,at:at,checks:c,ok:c.every(function(x){return x[1]})};
+}
+function renderAddr(){
+  var a=$('#addr').value,r=checkAddr(a);
+  $('#parts').innerHTML=r.at===1?'<span><small>使用者帳號</small>'+esc(r.user||'（空）')+'</span><span class="at">@</span><span><small>郵件伺服器位址</small>'+esc(r.server||'（空）')+'</span>':'<span><small>尚未拆出兩段</small>'+esc(a||'（空）')+'</span>';
+  $('#checks').innerHTML=r.checks.map(function(c){return '<li><span class="'+(c[1]?'y':'n')+'">'+(c[1]?'✓':'✗')+'</span><span>'+c[0]+'</span></li>'}).join('');
+  var v=$('#verdict');v.textContent=r.ok?'這是格式正確的電子郵件地址':'這不是有效的電子郵件地址';v.style.color=r.ok?'var(--ok)':'var(--bad)';
+}
+var AP=['jameschen@yahoo.com.tw','lee643@nfu.edu.tw','A213$ms75.hinet.net','dos_tw.tw@yahoo.com','linda @yahoo.com.tw','king@ntu.edu.tw'];
+$('#addrPresets').innerHTML=AP.map(function(x,i){return '<button class="pill" data-a="'+i+'">'+esc(x)+'</button>'}).join('');
+$('#addrPresets').addEventListener('click',function(e){var b=e.target.closest('[data-a]');if(!b)return;$('#addr').value=AP[+b.dataset.a];renderAddr()});
+$('#addr').addEventListener('input',renderAddr);
+
+var PEOPLE=['小美','志雄','宜靜'],ROLES={'小美':'to','志雄':'cc','宜靜':'bcc'},VIEWER='sender';
+var RN={to:'收件者',cc:'副本',bcc:'密件副本',none:'不寄'};
+$('#who').innerHTML=PEOPLE.map(function(p,i){
+  return '<div><span>'+p+'</span><select id="role'+i+'" aria-label="'+p+'的欄位">'+['to','cc','bcc','none'].map(function(r){return '<option value="'+r+'"'+(ROLES[p]===r?' selected':'')+'>'+RN[r]+'</option>'}).join('')+'</select></div>';
+}).join('');
+$('#viewer').innerHTML=['sender'].concat(PEOPLE).map(function(p,i){
+  return '<button class="pill'+(p==='sender'?' on':'')+'" role="radio" aria-checked="'+(p==='sender')+'" data-v="'+p+'">'+(p==='sender'?'大明（寄件者）':p)+'</button>';
+}).join('');
+function renderMailbox(){
+  var by=function(r){return PEOPLE.filter(function(p){return ROLES[p]===r})};
+  var to=by('to'),cc=by('cc'),bcc=by('bcc');
+  if(VIEWER!=='sender'&&ROLES[VIEWER]==='none')VIEWER='sender';
+  $$('#viewer button').forEach(function(b){
+    var p=b.dataset.v,dis=p!=='sender'&&ROLES[p]==='none';
+    b.disabled=dis;b.style.opacity=dis?.4:1;
+    var on=p===VIEWER;b.classList.toggle('on',on);b.setAttribute('aria-checked',on);
+  });
+  var rows='<dt>寄件者</dt><dd>大明</dd><dt>收件者</dt><dd>'+(to.length?to.join('、'):'（無）')+'</dd>';
+  if(cc.length)rows+='<dt>副本</dt><dd>'+cc.join('、')+'</dd>';
+  var note;
+  if(VIEWER==='sender'){
+    if(bcc.length)rows+='<dt>密件副本</dt><dd>'+bcc.join('、')+'（只有寄件者看得到）</dd>';
+    note='寄件者自己知道所有收件者，包含密件副本。';
+  }else if(ROLES[VIEWER]==='bcc'){
+    rows+='<dt>密件副本</dt><dd>你（其他密件副本的人看不到）</dd>';
+    note=VIEWER+'在密件副本中：看得到收件者與副本，但看不到其他密件副本的人。';
+  }else{
+    note=VIEWER+'看得到收件者與副本名單，完全不知道有哪些人在密件副本。'+(bcc.length?'（目前有 '+bcc.length+' 位）':'');
+  }
+  $('#mailbox').innerHTML='<dl>'+rows+'</dl>';
+  var none=!to.length&&!cc.length&&!bcc.length;
+  $('#mailnote').innerHTML=(none?'<span class="warn">至少要有 1 位收件者才能寄出郵件。</span> ':'')+esc(note);
+}
+PEOPLE.forEach(function(p,i){$('#role'+i).addEventListener('change',function(e){ROLES[p]=e.target.value;renderMailbox()})});
+$('#viewer').addEventListener('click',function(e){var b=e.target.closest('[data-v]');if(!b||b.disabled)return;VIEWER=b.dataset.v;renderMailbox()});
+
+var PR=[
+ {t:'把一封信寄出去',a:['SMTP'],e:'SMTP 負責寄信。'},
+ {t:'設定郵件軟體的「外寄郵件伺服器」',a:['SMTP'],e:'外寄伺服器用 SMTP。'},
+ {t:'把伺服器上所有郵件下載到電腦',a:['POP3'],e:'POP3 收信時會把郵件全部下載。'},
+ {t:'郵件留在伺服器，先看寄件者與主旨再決定是否下載',a:['IMAP'],e:'這是 IMAP 的特色。'},
+ {t:'設定「內收郵件伺服器」可以選哪些？',a:['POP3','IMAP'],e:'內收伺服器是 POP3 或 IMAP，兩個都對。'}
+];
+var prDone={};
+$('#protos').innerHTML=PR.map(function(x,i){return '<div class="mini" id="pr'+i+'"><p>'+esc(x.t)+'</p><div class="row">'+['SMTP','POP3','IMAP'].map(function(n){return '<button class="btn ghost" data-pr="'+i+'" data-n="'+n+'">'+n+'</button>'}).join('')+'</div><p class="tip" hidden></p></div>'}).join('');
+$('#protos').addEventListener('click',function(e){
+  var b=e.target.closest('[data-pr]');if(!b)return;var i=+b.dataset.pr,x=PR[i],ok=x.a.indexOf(b.dataset.n)>=0,box=$('#pr'+i),tip=$('.tip',box);
+  box.className='mini '+(ok?'right':'wrong');tip.hidden=false;tip.textContent=(ok?'✓ ':'✗ 再想想。')+(ok?x.e:'');
+});
+var TL=[
+ ['可以離線閱讀郵件',0,'郵件已存在電腦，不用連線。'],
+ ['換一台電腦就要重新建立帳號與通訊錄',0,'這是電子郵件軟體的缺點。'],
+ ['任何一台可上網的電腦都能收發',1,'只要有瀏覽器與網路。'],
+ ['郵件存在網路上，不佔電腦硬碟',1,'網路電子信箱的優點。'],
+ ['必須連線才能閱讀郵件',1,'郵件在網路上，離線看不到。'],
+ ['收發的郵件儲存在電腦，會佔用硬碟空間',0,'電子郵件軟體的缺點。']
+];
+$('#tools').innerHTML=TL.map(function(x,i){return '<div class="mini" id="tl'+i+'"><p>'+esc(x[0])+'</p><div class="row"><button class="btn ghost" data-tl="'+i+'" data-c="0">電子郵件軟體</button><button class="btn ghost" data-tl="'+i+'" data-c="1">網路電子信箱</button></div><p class="tip" hidden></p></div>'}).join('');
+$('#tools').addEventListener('click',function(e){
+  var b=e.target.closest('[data-tl]');if(!b)return;var i=+b.dataset.tl,x=TL[i],ok=+b.dataset.c===x[1],box=$('#tl'+i),tip=$('.tip',box);
+  box.className='mini '+(ok?'right':'wrong');tip.hidden=false;tip.textContent=ok?'✓ '+x[2]:'✗ 不是這個，再選另一個。';
+});
+
+/* ---------- flashcards ---------- */
+var CARDS=[
+ ['首頁（homepage）','進入網站時的第一個網頁。','www'],
+ ['瀏覽器','瀏覽 WWW 網頁的工具，如 Edge、Firefox、Chrome、Safari、Opera。Outlook 不是瀏覽器。','www'],
+ ['Safari','Apple 的瀏覽器，macOS 內建；iPhone 內建的瀏覽器也是它。','www'],
+ ['Cookie','網站記錄的使用者瀏覽資訊。可在瀏覽器設定限制網站存取。','www'],
+ ['外掛程式','安裝在瀏覽器上、用來擴充功能的程式。','www'],
+ ['入口網站（portal）','分類蒐集許多網頁資料方便查詢，通常有搜尋引擎。例：Yahoo!奇摩、PChome、yam 蕃薯藤、MSN 台灣。','search'],
+ ['搜尋引擎','用關鍵字查詢網路資源的功能，如 Google、Bing。','search'],
+ ['NOT 排除（-）','搜尋時用減號。資訊展 -高雄：找資訊展但不含高雄。','search'],
+ ['AND（空白）','關鍵字之間用空白，結果同時包含這些關鍵字。','search'],
+ ['OR','符合任一關鍵字即可，搜尋結果最多。','search'],
+ ['" "（雙引號）','必須完全符合，搜尋結果最少。','search'],
+ ['site:','指定在特定網域搜尋，如 site:gov 資訊展。','search'],
+ ['filetype:','只搜尋特定檔案類型，如 考古題 filetype:pdf。','search'],
+ ['以圖找圖','用圖片搜尋相似圖或來源網站：Google 圖片、TinEye。','search'],
+ ['電子郵件地址格式','使用者帳號@郵件伺服器位址，不可含空白。','mail'],
+ ['SMTP','寄信的通訊協定（外寄郵件伺服器）。','mail'],
+ ['POP3','收信協定，會把伺服器上所有郵件下載到電腦。','mail'],
+ ['IMAP','收信協定，郵件留在伺服器，可先看寄件者與主旨再決定是否下載。','mail'],
+ ['迴紋針符號','郵件有附加檔案。','mail'],
+ ['副本','讓相關的人也收到郵件，所有收件者都看得到。','mail'],
+ ['密件副本','隱藏該收件者的名稱與地址，其他收件者看不到，達到知會與保密。','mail'],
+ ['Re: 與 Fw:','Re: 是回信；Fw: 是轉寄。','mail'],
+ ['電子郵件軟體','Outlook、Thunderbird。可離線閱讀；換電腦要重建帳號；郵件佔用硬碟。','mail'],
+ ['網路電子信箱','用瀏覽器收發（Gmail、Yahoo!奇摩）。任何可上網的電腦都行；郵件在網路上；要連線才能看。','mail'],
+ ['六度分隔理論','2 個互不認識的人，透過週遭 6 個人的關係就會產生關聯；社群網站是它的實踐。','app'],
+ ['微型網誌','簡短訊息，通常限制 200 字內。微博、X（推特）。','app'],
+ ['BBS 電子佈告欄','多主題討論看板，如批踢踢。可用 PCMan、Welly 或 telnet 連線。','app'],
+ ['即時通訊 IM','線上即時訊息、視訊語音、檔案分享。LINE、WeChat、Messenger。','app'],
+ ['HTTP 檔案傳輸','透過瀏覽器；下載途中斷線要重新下載。','file'],
+ ['FTP','要帳號密碼登入；匿名帳號（Anonymous）可免輸入。軟體：FileZilla、CuteFTP。','file'],
+ ['P2P（點對點）','不經特定伺服器、多點對多點下載，分享的人越多越快。軟體：eMule、BitComet、Send Anywhere。風險：惡意軟體、著作權、隱私外洩。','file'],
+ ['雲端硬碟空間','MEGA 20GB、Google 15GB、OneDrive 5GB、Dropbox 2GB。','file'],
+ ['數位內容','把文字、圖像、影像、語音等多媒體數位化並整合成的產品或服務。','content'],
+ ['電子墨水（E Ink）','電子紙顯示：較不反光、低耗電、太陽下可閱讀，如 Kindle。','content'],
+ ['ePub','電子書廠商最常用的格式，新版可嵌入影音。','content'],
+ ['azw / mobi / azw3','Amazon 專用電子書格式；azw3 以 mobi 為基礎，是目前主要格式。','content'],
+ ['pdf 電子書','保留文件原貌、支援中文直排；檔案大、翻頁慢。','content'],
+ ['數位學習平台','ewant 育網開放教育平台、MOOCs 磨課師、均一教育平台。Steam 不是（它是電腦遊戲平台）。','content']
+];
+var cardFilter='todo',deck=[],cpos=0,flipped=false;
+function buildDeck(keep){
+  deck=CARDS.map(function(_,i){return i}).filter(function(i){return cardFilter==='all'||!store.cards[i]});
+  if(!keep)cpos=0;if(cpos>=deck.length)cpos=0;flipped=false;
+}
+function renderCard(){
+  var area=$('#cardArea'),cnt=$('#cardCount');
+  cnt.textContent=deck.length?((cpos+1)+' / '+deck.length):'';
+  if(!deck.length){area.innerHTML='<div class="panel"><p style="margin:0"><b>待複習的卡片都記住了。</b>切換到「全部」可以再看一遍。</p></div>';return}
+  var c=CARDS[deck[cpos]];
+  area.innerHTML='<button class="card'+(flipped?' back':'')+'" data-act="flip" aria-label="翻面">'+
+    '<span class="tg">'+esc(TOPICS[c[2]])+(store.cards[deck[cpos]]?' · 已記住':'')+'</span>'+
+    (flipped?'<span class="def">'+esc(c[1])+'</span>':'<span class="term">'+esc(c[0])+'</span><span class="hint">點一下看答案</span>')+
+    '</button><div class="deckfoot"><button class="btn ghost" data-act="prev">上一張</button><button class="btn ghost" data-act="again">再看一次</button><button class="btn" data-act="known">記住了</button><button class="btn ghost" data-act="next">下一張</button></div>';
+}
+function stepCard(d){if(!deck.length)return;cpos=(cpos+d+deck.length)%deck.length;flipped=false;renderCard()}
+$('[data-view="cards"]').addEventListener('click',function(e){
+  var f=e.target.closest('[data-f]');
+  if(f){cardFilter=f.dataset.f;$$('#cardFilter .pill').forEach(function(p){p.classList.toggle('on',p===f)});buildDeck();renderCard();return}
+  var b=e.target.closest('[data-act]');if(!b)return;var a=b.dataset.act;
+  if(a==='flip'){flipped=!flipped;renderCard()}
+  else if(a==='next')stepCard(1);
+  else if(a==='prev')stepCard(-1);
+  else if(a==='again'){delete store.cards[deck[cpos]];save();stats();stepCard(1)}
+  else if(a==='known'){store.cards[deck[cpos]]=1;save();stats();if(cardFilter==='todo'){buildDeck(true);flipped=false;renderCard()}else stepCard(1)}
+  else if(a==='shuffle'){for(var i=deck.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=deck[i];deck[i]=deck[j];deck[j]=t}cpos=0;flipped=false;renderCard()}
+});
+document.addEventListener('keydown',function(e){
+  if(location.hash!=='#cards'||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return;
+  if(e.key==='ArrowRight')stepCard(1);else if(e.key==='ArrowLeft')stepCard(-1);
+});
+
+/* ---------- quiz ---------- */
+var QS=[];
+function q(t,text,opts,a,exp,src){QS.push({t:t,text:text,opts:opts,a:a,exp:exp,src:src||''})}
+q('www','要看 WWW 中的各類資訊，通常藉助哪一種軟體？',['影像處理軟體','電子郵件軟體','簡報軟體','瀏覽器'],3,'瀏覽器（browser）就是瀏覽 WWW 網頁的工具。');
+q('www','下列何者不是瀏覽器軟體？',['Firefox','Outlook','Chrome','Safari'],1,'Outlook 是電子郵件軟體。');
+q('www','下列有關設定瀏覽器安全等級的敘述，何者錯誤？',['可讓瀏覽器不下載外掛程式元件','可讓瀏覽器不執行程式碼','可自動設定防火牆','可讓瀏覽器限制某些網站存取 Cookie'],2,'瀏覽器安全設定可限制外掛、程式碼、Cookie、彈出視窗，但不會自動設定防火牆。','109 商管群');
+q('search','在 Google 要找到同時討論「瑪利歐」與「寶可夢」的資訊，應輸入哪一組搜尋條件？',['瑪利歐 寶可夢','瑪利歐 # 寶可夢','瑪利歐 $ 寶可夢','瑪利歐 % 寶可夢'],0,'兩個關鍵字之間加空白就是 AND，結果同時包含兩者。');
+q('search','Google、Yahoo!奇摩等網站讓使用者以關鍵字查詢網路資源，這個功能稱為？',['Routers','Search Engines','Web site','Web Servers'],1,'這是搜尋引擎（search engine）的功能。');
+q('search','欲用 Google 搜尋台灣教育機構網域（edu.tw）中有關 ADSL 的網頁，哪個查詢字串最適合？',['ADSL site:edu.tw','area:edu.tw ADSL','ADSL www.edu.tw','www:edu.tw ADSL'],0,'限定網域用 site:。','102 工管類');
+q('search','在 Google 搜尋欄輸入哪個字串，會得到數目最多的搜尋結果？',['"紅樓夢背景"','"紅樓夢" OR "背景"','"紅樓夢" AND "背景"','"紅樓夢" "背景"'],1,'OR 只需符合任一個，範圍最大，結果最多。','103 商管群');
+q('search','要找完整關鍵字「資訊科技」的網頁，並剔除含「公司」的網頁，哪個指令較適合？',['"資訊科技 no公司"','"資訊科技" !="公司"','"資訊科技" not"公司"','"資訊科技" -"公司"'],3,'完整比對用雙引號，排除用減號 -。','104 商管群');
+q('search','哪一種輸入可以在 aa.com 網站中搜尋內容有「BB」但排除「CC」及「DD」的網頁？',['BB -CC DD site:aa.com','BB -CC -DD site:aa.com','BB -CC DD http:aa.com','BB -CC -DD http:aa.com'],1,'每個要排除的詞前面都要加減號，限定網站用 site:。','105 工管類');
+q('search','以 Google 為例，使用哪個字串搜尋，結果的項目數最少？',['統測 學測','統測 OR 學測','統測 -學測','"統測 學測"'],3,'雙引號要求完整連在一起出現，條件最嚴格，結果最少。','106 工管類');
+q('search','哪一個 Google 運算子用來搜尋特定網站的資料？',['site:','inurl:','link:','location:'],0,'site: 指定網域。','106 工管類');
+q('search','想找內容含「計算機概論考古題」但不含「解答」的 pdf 文件，哪個搜尋字串最符合需求？',['(計算機概論考古題-解答) in:pdf','計算機概論考古題 -解答 filetype:pdf','計算機概論考古題 NO 解答 filein:pdf','計算機概論考古題 without:解答 typein:pdf'],1,'排除用 -，檔案類型用 filetype:。','107 工管類');
+q('search','要搜尋「紅絲絨蛋糕」、不要含「麵包」、只在 mycookie.idv.tw 網域找，哪個字串最適切？',['紅絲絨蛋糕 XOR 麵包web:www.mycookie.idv.tw','紅絲絨蛋糕 -麵包site:mycookie.idv.tw','紅絲絨蛋糕 ~麵包@mycookie.idv.tw','(紅絲絨蛋糕 -麵包)%www.mycookie.idv.tw'],1,'減號排除、site: 限定網域。','108 工管類');
+q('search','下列有關「Google 圖片」搜尋功能的敘述，何者不正確？',['可以用特定字詞或詞組來搜尋圖片','可設定封鎖含有限制級內容的搜尋結果','無法以圖片來反向搜尋含有該圖片的網站','可以用圖片來搜尋外觀與該圖片相似的圖片'],2,'Google 圖片可以「以圖找圖」，反向搜尋含有該圖片的網站。','108 工管類');
+q('search',"以 Google 為例，下列敘述何者最正確？",['搜尋「1024+1024」，無法獲得答案 2048','搜尋「臺中 -美食」，可以獲得臺中地區的美食資料','搜尋「天氣臺北中正區」，可以獲得臺北中正區的溫度','搜尋「計算機概論 site:tcte.edu.tw」，無法獲得該網站中關於計算機概論的資料'],2,'Google 可以直接顯示天氣；A 能算出 2048；B 的減號是排除美食；D 正是 site: 的用途。','110 工管類');
+q('search','使用 Google 搜尋「具完全相符字串」的網頁，哪種搜尋技巧最相關？',['""','*','-','..'],0,'雙引號代表完全符合。','110 工管類');
+q('search','下列有關資料搜尋的敘述何者錯誤？',['Google Map 可以建議行車路線','維基百科提供知識搜尋的服務','搜尋網路中的檔案必須透過檔案伺服器來完成','在搜尋引擎中輸入關鍵字可以快速找到相關資料'],2,'用搜尋引擎就能找檔案，不一定要透過檔案伺服器。','105 工管類');
+q('search','參加猜謎節目，有一題不會回答，但可以用網際網路的服務找答案。下列哪一項最不可能利用？',['Google 搜尋引擎','Yahoo!奇摩搜尋','維基百科','MOD 互動電視'],3,'MOD 互動電視不是網際網路的資料搜尋服務。');
+q('mail','李小明的電子郵件地址為 lee643@nfu.edu.tw，lee643 代表什麼？',['小明的帳號','小明的姓名','小明的密碼','小明的伺服器'],0,'@ 前面是使用者帳號。');
+q('mail','下列哪一個不可能是 EMAIL（電子郵件）地址？',['dos_tw.tw@yahoo.com','A213$ms75.hinet.net','jjw_7@tsmc.com','d8203222@mail.asd.com.tw'],1,'B 沒有 @，帳號裡還出現 $。');
+q('mail','收發電子郵件時，負責收取的是 (1) 伺服器，負責發送的是 (2) 伺服器。(1)(2) 應填？',['HTTP、FTP','FTP、SMTP','SMTP、POP3','POP3、SMTP'],3,'收信 POP3（或 IMAP），寄信 SMTP。');
+q('mail','技安想用 Thunderbird 寄信給阿福，外寄郵件伺服器通常採用哪一種通訊協定？',['IMAP','POP3','SMTP','HTTP'],2,'外寄用 SMTP。');
+q('mail','想把郵件寄給許多人，又不想讓收件者彼此知道你寄給哪些人，可以用哪一項功能？',['密件副本','副本','加密','無此功能'],0,'密件副本會隱藏收件者的名稱與地址。');
+q('mail','在郵件軟體的收件匣，郵件前面出現迴紋針符號，表示此郵件：',['含有讀取回條','含有數位簽名檔','具有高優先順序','含有附加檔案'],3,'迴紋針代表附加檔案。');
+q('mail','下列有關網路電子信箱的敘述，何者錯誤？',['收取的郵件可以下載並儲存在電腦硬碟中，供離線閱讀','個人可使用的信箱空間通常由網路業者決定','可直接以瀏覽器閱讀郵件','只要使用可連上網際網路的電腦即可收發郵件'],0,'網路電子信箱的郵件存在網路上，要連線才能閱讀；離線閱讀是郵件軟體的優點。');
+q('mail','小明欲以電子郵件軟體寄信給兩位好朋友，哪個是正確的「收件者」欄位填寫方式？',['can@au.edu~bin@pu.edu','can@au.edu;bin@pu.edu','can@au.edu:bin@pu.edu','can@au.edu&bin@pu.edu'],1,'多位收件者以分號（;）分隔。');
+q('mail','琳達的帳號是 linda，使用 Yahoo 信箱（yahoo.com.tw），她的郵件地址是？',['yahoo@linda.com.tw','yahoo#linda.com.tw','linda@yahoo.com.tw','linda#yahoo.com.tw'],2,'帳號@郵件伺服器位址。');
+q('mail','電子郵件允許你發送訊息到？',['只有在相同網域的使用者','可以在相同或不同網域的使用者','只可以發給認識的人','只可以發給通訊錄上的人'],1,'只要知道對方的地址，不限網域。');
+q('mail','電子郵件地址 king@ntu.edu.tw 中，@ 之後的 ntu.edu.tw 代表？',['使用者帳號','檔案傳輸之協定','郵件伺服器地址','個人網頁帳號'],2,'@ 後面是郵件伺服器位址。','102 資電類');
+q('mail','一般電子郵件伺服器（Email Server）之間的「寄送郵件」是透過哪種通訊協定？',['HTTP','SMTP','POP3','DHCP'],1,'寄送郵件用 SMTP。','103 資電類');
+q('mail','要將一封郵件寄給許多人，但收件者之間彼此不知道還寄給哪些人，可使用哪項功能？',['加密','副本收件人','正本收件人','密件副本收件人'],3,'密件副本會隱藏其他收件者看不到的名單。','104 工管類');
+q('mail','大明寄信：「收件者」填小美、「副本」填志雄、「密件副本」填宜靜。小美收到信時，哪項敘述最正確？',['小美不會知道該信有知會志雄及宜靜','小美可以知道該信有知會志雄及宜靜','小美可以知道有知會宜靜，但不會知道有知會志雄','小美可以知道有知會志雄，但不會知道有知會宜靜'],3,'副本大家都看得到；密件副本被隱藏。可到郵件實驗室驗證。','107 工管類');
+q('mail','下列有關 abc@mail.com.tw 電子郵件地址的敘述，何者正確？',['.com.tw 為使用者帳號','abc@mail 為使用者帳號','@mail 為郵件傳輸協定','mail.com.tw 為郵件伺服器位址'],3,'@ 前是帳號 abc，@ 後 mail.com.tw 是伺服器位址。','107 商管群');
+q('mail','在「IMAP、HTML、SMTP、FTP、POP3」中，有幾項與內收郵件伺服器通訊協定有關？',['4','3','2','1'],2,'內收是 IMAP 與 POP3，共 2 項；SMTP 是外寄。','108 工管類');
+q('mail','下列有關 Gmail 的說明，何者正確？',['每個人只能申請一組 Gmail 帳戶','必須安裝專用的 Gmail 郵件軟體才能開啟或寄信','使用「回覆」時，若沒有另行編輯，會把對方郵件所有內容（含附加檔案）寄回','使用「轉寄」時，若沒有另行編輯，會把對方郵件所有內容（含附加檔案）寄給指定的收信者'],3,'轉寄會帶著原信內容與附加檔案；回覆則不會附上附加檔案。','109 工管類');
+q('mail','關於電子郵件的使用，缺少何種資訊則無法順利寄達？',['副本','主旨','密件副本','收件者信箱地址'],3,'至少要有 1 位收件者地址。','110 工管類');
+q('mail','下列何者可以利用 Web mail 來達成？',['收發電子郵件（E-mail）','架設 BBS 網站','與好友小芳進行網路聊天','架設電子郵件伺服器（mail server）'],0,'Web mail 讓你用瀏覽器收發郵件。');
+q('mail','下列關於電子郵件軟體與網路電子信箱的敘述，何者正確？',['電子郵件軟體必須保持連線才可閱讀郵件','網路電子信箱是使用 POP3 或 IMAP 通訊協定來發送信件','使用電子郵件軟體不需設定帳戶資料即可收發郵件','網路電子信箱中的郵件存放在網路上，不會佔用電腦的硬碟空間'],3,'郵件軟體可離線閱讀，也要先設定帳戶；網路信箱的郵件在網路上。');
+q('mail','有關網路電子信箱之敘述，下列何者錯誤？',['無法刪除郵件','可以回覆郵件','方便旅遊者接收郵件','可使用網頁瀏覽器閱讀郵件'],0,'網路電子信箱一樣可以刪除郵件。');
+q('mail','在設定電子郵件的哪一項功能時，可能會選用 POP3（郵局通訊協定第三版）？',['收信','寄信','通訊錄','郵件規則'],0,'POP3 用來收信。');
+q('mail','偌涵收到一封郵件，收件者欄沒有顯示她自己的電子郵件地址，最可能的原因是？',['該郵件含有附加檔案','該郵件沒有主旨','對方將她的地址輸入在「密件副本」欄','該郵件為轉寄信件'],2,'密件副本的地址不會顯示在標頭。');
+q('app','部落格可讓網友發表個人見解、心得或張貼照片，並在留言處討論。下列何者是常見的部落格？',['痞客邦','Yahoo!奇摩','momo 購物網','WeChat'],0,'痞客邦、udn 部落格是部落格；WeChat 是即時通訊。');
+q('app','下列何者不是即時通訊軟體常見的功能？',['線上即時訊息','視訊語音交談','檔案分享','檔案壓縮'],3,'IM 的功能是訊息、視訊語音、檔案分享。');
+q('app','小惠重度使用手機，用 LINE 傳訊息，逛街時拍照打卡上傳 Instagram，偶爾看朋友在 X（推特）的心情紀錄。她沒有使用哪一種網路服務？',['即時通訊','電子佈告欄系統','社群網站','微型網誌'],1,'LINE 是即時通訊、Instagram 是社群網站、X 是微型網誌；情境中沒有 BBS。');
+q('app','小惠看朋友的 X（推特）內容時，不太可能看到哪一則？',['阿文用 2 句詩來表達心情','曉倫用一張圖片及 1 行文字記錄旅遊點滴','仁荷引用歌曲歌詞抒發心情','俊憲分享自創的 1 萬字武俠小說'],3,'微型網誌通常限制字數在 200 字內，1 萬字小說放不下。');
+q('app','哪一種網路服務最容易讓公眾人物發表動態、活動消息或張貼照片供大眾分享？',['部落格','網路電話','電子信箱','CuteFTP'],0,'部落格適合個人公開發表。','102 資電類');
+q('app','小華可以在網路上與人即時交換訊息，配合電腦週邊還能用網路視訊開小組會議。下列哪個應用程式的功能與此最不相關？',['BBS','LINE','Skype','Hangouts'],0,'BBS 是討論看板系統，不是視訊會議工具。','110 工管類');
+q('app','下列哪一個通訊軟體屬於 VoIP 網路電話應用軟體？',['FileZilla','eMule','Skype','Google Wallet'],2,'FileZilla 是 FTP 軟體、eMule 是 P2P 軟體。','104 工管類');
+q('app','許多線上教學網站把授課內容放在網站上，讓學習者隨時隨地上網瀏覽，這種教學方式稱為？',['電腦輔助教學','網路教學','線上廣播教學','模擬訓練'],1,'透過網路進行的教學即網路教學。');
+q('app','下列關於雲端運算以及服務的敘述，何者不適當？',['雲端運算是分散式運算技術的運用，由多部伺服器進行運算和分析','Gmail 會自動將網際網路中的郵件快速儲存到個人電腦中，供離線瀏覽所有郵件內容','雲端服務包含多人可透過瀏覽器同時進行文書編輯','使用智慧型手機在臉書上發佈多媒體訊息時，會使用到雲端服務'],1,'Gmail 的郵件存放在雲端，不會自動存到個人電腦。','106 資電類');
+q('file','下列何者不是常見的網路檔案傳輸方式？',['HTTP 傳輸','FTP 傳輸','P2P 傳輸','C2C 傳輸'],3,'常見的是 HTTP、FTP、P2P；C2C 是消費者對消費者的電商模式。');
+q('file','哪一種傳輸採用多點對多點的下載方式，可從不同電腦下載檔案，分享的越多速度越快？',['HTTP 傳輸','P2P 傳輸','FTP 傳輸','雲端硬碟下載'],1,'這是 P2P 的特色。');
+q('file','使用檔案分享軟體可與網友分享自己電腦的檔案，但警方提醒別把私密資料（如網路報稅資料）也分享出去。這類軟體稱為？',['瀏覽器','FTP 軟體','即時通訊軟體','P2P 軟體'],3,'P2P 軟體容易造成隱私外洩。');
+q('file','下列何者是以 P2P（peer-to-peer）方式提供服務？',['WWW','YouTube','Wikipedia','Send Anywhere'],3,'Send Anywhere、eMule、BitComet 都是 P2P 軟體。');
+q('file','下列敘述何者最不正確？',['FileZilla 為 FTP 檔案傳輸軟體','FTP 屬於 TCP/IP 協定中的應用層','Windows 作業系統的檔案總管不支援 FTP 服務','以「ftp://ftp.tcte.edu.tw」而言，表示該網站使用 FTP 通訊協定'],2,'Windows 檔案總管可以連 FTP 網站，所以 C 錯誤。','110 工管類');
+q('file','關於檔案傳輸的敘述，下列何者錯誤？',['FTP 與 P2P 兩種方式均可分享檔案','BitComet 為 P2P 用戶端常用的軟體之一','FileZilla 為 FTP 用戶端常用的軟體之一','用主從式架構來分享檔案之一的方式包含 P2P'],3,'P2P 是點對點（對等式），不是主從式架構。','112 商管群');
+q('file','全家規劃旅行，希望能隨時在手機、平板或筆電上查看並編輯景點標記與路線。哪種做法最方便且具備即時性？',['將行程資訊即時發送到家人的 Email','把各行程截圖存入相簿，再以相簿分享','把行程檔案上傳至雲端硬碟、設定權限，分享連結給家人','透過藍牙將景點及路線檔案傳送至家人裝置'],2,'雲端硬碟可跨裝置即時查看並編輯。','115 商管群');
+q('content','下列何者不是常見的數位內容？',['電子書','書面報章雜誌','數位音樂','數位影片'],1,'數位內容必須是數位化的，書面報章雜誌不是。');
+q('content','下列何者不是使用電子墨水（E Ink）顯像技術的電子書閱讀器之特色？',['低耗電','不易反光','在太陽下可閱讀','易使眼睛疲勞'],3,'E Ink 較不反光，不易使眼睛疲勞。');
+q('content','哪一種電子書格式是目前電子書廠商最常使用的，且較新的版本還可嵌入影音內容？',['pdf','txt','ePub','azw'],2,'ePub 是出版廠商最常用的格式。');
+q('content','下列何者不是使用電腦閱讀電子書的常見格式？',['txt','html','docx','azw'],3,'azw 是 Amazon 電子書城專用格式。');
+q('content','下列何者不是電子書的特色？',['節省紙張','節省書籍的存放空間','可呈現多媒體內容','可自行列印出來販售'],3,'列印後販售會侵害著作權。');
+q('content','下列何者無法用來閱讀電子書？',['智慧型手機','平板電腦','個人電腦','數位相機'],3,'數位相機不是閱讀電子書的裝置。');
+q('content','利用資訊科技將文字、圖像、影像、語音等多媒體內容數位化，並整合而成的產品或服務稱為？',['數位內容','數位服務','數位科技','雲端應用'],0,'這就是數位內容的定義。');
+q('content','下列何者不是常見的數位學習平台？',['Steam 平台','ewant 育網開放教育平台','MOOCs 磨課師','均一教育平台'],0,'Steam 是電腦遊戲取得平台。');
+
+var qTopic='all',qCount=10,S=null,box=$('#quizBox');
+function stats(){
+  var ids=Object.keys(store.q),right=ids.filter(function(k){return store.q[k]===1}).length;
+  $('#stAns').textContent=ids.length;
+  $('#stAcc').textContent=ids.length?Math.round(right/ids.length*100)+'%':'–';
+  $('#stCards').textContent=Object.keys(store.cards).length+' / '+CARDS.length;
+}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=a[i];a[i]=a[j];a[j]=t}return a}
+function wrongIds(){return Object.keys(store.q).filter(function(k){return store.q[k]===0}).map(Number)}
+function setupView(){
+  var w=wrongIds().length;
+  box.innerHTML='<div class="setup"><div><label class="f">範圍</label><div class="row" id="qTopics">'+
+    [['all','全部']].concat(Object.keys(TOPICS).map(function(k){return [k,TOPICS[k]]})).map(function(x){return '<button class="pill'+(qTopic===x[0]?' on':'')+'" data-t="'+x[0]+'">'+x[1]+'</button>'}).join('')+
+    '</div></div><div><label class="f">題數</label><div class="row">'+[10,20,0].map(function(n){return '<button class="pill'+(qCount===n?' on':'')+'" data-n="'+n+'">'+(n||'全部')+'</button>'}).join('')+
+    '</div></div><div class="row"><button class="btn" data-act="start">開始測驗</button><button class="btn ghost" data-act="wrong"'+(w?'':' disabled')+'>只練錯題（'+w+'）</button></div>'+
+    '<p class="empty">題庫共 '+QS.length+' 題，含講義練習題與 102–115 年統測題。作答紀錄存在這台瀏覽器。</p></div>';
+}
+function pool(){return QS.map(function(_,i){return i}).filter(function(i){return qTopic==='all'||QS[i].t===qTopic})}
+function begin(ids){S={ids:ids,pos:0,score:0,wrong:[],lastIds:ids};playView()}
+function playView(){
+  var id=S.ids[S.pos],Q=QS[id];
+  box.innerHTML='<div class="qhead"><span>第 '+(S.pos+1)+' / '+S.ids.length+' 題</span><span>'+esc(TOPICS[Q.t])+(Q.src?' · '+esc(Q.src):'')+'</span></div>'+
+   '<div class="bar"><i style="width:'+(S.pos/S.ids.length*100)+'%"></i></div>'+
+   '<p class="qtext">'+esc(Q.text)+'</p><div class="opts">'+Q.opts.map(function(o,i){return '<button class="opt" data-act="pick" data-i="'+i+'"><b>'+'ABCD'[i]+'</b><span>'+esc(o)+'</span></button>'}).join('')+'</div><div class="fb" id="fb" hidden></div>';
+}
+function pick(i){
+  var id=S.ids[S.pos],Q=QS[id],ok=i===Q.a;
+  $$('.opt',box).forEach(function(b,k){b.disabled=true;if(k===Q.a)b.classList.add('good');else if(k===i)b.classList.add('bad')});
+  store.q[id]=ok?1:0;save();stats();
+  if(ok)S.score++;else S.wrong.push(id);
+  var last=S.pos===S.ids.length-1,fb=$('#fb');fb.hidden=false;
+  fb.innerHTML='<p style="margin:0 0 10px"><strong class="'+(ok?'g':'b')+'">'+(ok?'答對了':'答錯了，正確答案是 '+'ABCD'[Q.a])+'</strong>　'+esc(Q.exp)+'</p><button class="btn" data-act="next" id="nextBtn">'+(last?'看結果':'下一題')+'</button>';
+  var nb=$('#nextBtn');if(nb)nb.focus();
+}
+function resultView(){
+  var pct=Math.round(S.score/S.ids.length*100),msg=pct>=85?'很穩，可以挑戰更多題。':pct>=60?'有基礎，錯題再看一輪會更穩。':'先回到重點整理與閃卡，再來一次。';
+  box.innerHTML='<p class="empty">本次結果</p><div class="score">'+S.score+' / '+S.ids.length+'　<span style="font-size:1.4rem;color:var(--muted)">'+pct+'%</span></div><p>'+msg+'</p>'+
+   (S.wrong.length?'<h3>這次答錯的題目</h3><ul class="tight">'+S.wrong.map(function(id){return '<li>'+esc(QS[id].text)+'<br><span class="empty">答案：'+esc(QS[id].opts[QS[id].a])+'</span></li>'}).join('')+'</ul>':'')+
+   '<div class="row" style="margin-top:16px"><button class="btn" data-act="again">再來一次</button>'+(S.wrong.length?'<button class="btn ghost" data-act="retry">重做答錯的題</button>':'')+'<button class="btn ghost" data-act="menu">回設定</button></div>';
+}
+box.addEventListener('click',function(e){
+  var t=e.target.closest('[data-t]');if(t){qTopic=t.dataset.t;setupView();return}
+  var n=e.target.closest('[data-n]');if(n){qCount=+n.dataset.n;setupView();return}
+  var b=e.target.closest('[data-act]');if(!b)return;var a=b.dataset.act;
+  if(a==='start'||a==='again'){var p=shuffle(pool());if(qCount)p=p.slice(0,qCount);begin(a==='again'&&S?shuffle(S.lastIds):p)}
+  else if(a==='wrong'){begin(shuffle(wrongIds()))}
+  else if(a==='pick'){if(!b.disabled)pick(+b.dataset.i)}
+  else if(a==='next'){if(S.pos<S.ids.length-1){S.pos++;playView()}else resultView()}
+  else if(a==='retry'){begin(shuffle(S.wrong))}
+  else if(a==='menu'){S=null;setupView()}
+});
+
+/* ---------- login & teacher dashboard ---------- */
+var VALID=/^[A-Za-z0-9][A-Za-z0-9_-]{2,19}$/,TPW='',ROWS=[],sortKey='id',sortDir=1;
+function show(w){
+  $('#login').hidden=w!=='login';$('#app').hidden=w!=='app';$('#teacher').hidden=w!=='teacher';
+  $('#userbar').hidden=w!=='app';$('#stats').hidden=w!=='app';window.scrollTo(0,0);
+}
+function refreshAll(){S=null;buildDeck();renderCard();setupView();stats()}
+function enterStudent(id){
+  SID=id;try{localStorage.setItem('net10-sid',id)}catch(e){}
+  store=readLocal();$('#whoId').textContent=id;show('app');refreshAll();route();
+  if(!API_URL){setSync('離線模式：進度只存在這台瀏覽器');return}
+  setSync('載入進度…');
+  api({action:'load',id:id}).then(function(r){
+    if(SID!==id)return;
+    if(r&&r.ok&&r.data){store={cards:r.data.cards||{},q:r.data.q||{}};try{localStorage.setItem(lsKey(),JSON.stringify(store))}catch(e){}refreshAll();setSync('進度已同步')}
+    else if(r&&r.ok){setSync('新同學，已建立');doSync()}
+    else setSync((r&&r.error)||'連線失敗，進度先存在本機');
+  }).catch(function(){setSync('連線失敗，進度先存在本機')});
+}
+$('#stuForm').addEventListener('submit',function(e){
+  e.preventDefault();var id=$('#sid').value.trim().toUpperCase(),er=$('#sidErr');
+  if(!VALID.test(id)){er.textContent='學號請輸入 3 到 20 個英文字母或數字。';return}
+  er.textContent='';enterStudent(id);
+});
+$('#logout').addEventListener('click',function(){
+  if(syncT){clearTimeout(syncT);doSync()}
+  try{localStorage.removeItem('net10-sid')}catch(e){}
+  SID='';store={cards:{},q:{}};$('#sid').value='';show('login');location.hash='';
+});
+function teacherPanel(on){$('#stuLogin').hidden=on;$('#tLogin').hidden=!on}
+$('#toTeacher').addEventListener('click',function(){teacherPanel(true);$('#tpw').focus()});
+$('#toStudent').addEventListener('click',function(){teacherPanel(false);$('#tErr').textContent=''});
+$('#tForm').addEventListener('submit',function(e){
+  e.preventDefault();var pw=$('#tpw').value,er=$('#tErr');
+  if(!API_URL){er.textContent='尚未設定 API_URL，請先完成後端部署。';return}
+  if(!pw){er.textContent='請輸入密碼。';return}
+  er.textContent='登入中…';
+  api({action:'list',password:pw}).then(function(r){
+    if(r&&r.ok){TPW=pw;ROWS=r.rows||[];$('#tpw').value='';er.textContent='';show('teacher');renderTeacher();$('#tMsg').textContent='已更新'}
+    else er.textContent=(r&&r.error)||'登入失敗';
+  }).catch(function(){er.textContent='連線失敗，請確認網路與 API_URL。'});
+});
+$('#tRefresh').addEventListener('click',function(){
+  $('#tMsg').textContent='載入中…';
+  api({action:'list',password:TPW}).then(function(r){
+    if(r&&r.ok){ROWS=r.rows||[];renderTeacher();$('#tMsg').textContent='已更新 '+new Date().toLocaleTimeString('zh-TW',{hour12:false})}
+    else $('#tMsg').textContent=(r&&r.error)||'載入失敗';
+  }).catch(function(){$('#tMsg').textContent='連線失敗'});
+});
+$('#tOut').addEventListener('click',function(){TPW='';ROWS=[];teacherPanel(false);show('login')});
+function fmtTime(d){var t=new Date(d);return isNaN(t)?'':t.toLocaleString('zh-TW',{hour12:false,month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}
+function teacherRows(){
+  return ROWS.map(function(r){var a=+r.answered||0,c=+r.correct||0;return {id:String(r.id),last:r.last,answered:a,correct:c,pct:a?Math.round(c/a*100):-1,cards:+r.cards||0,q:(r.data&&r.data.q)||{}}});
+}
+function renderTeacher(){
+  var rows=teacherRows(),act=rows.filter(function(r){return r.answered>0});
+  var avg=act.length?Math.round(act.reduce(function(s,r){return s+r.pct},0)/act.length):null;
+  var avgCards=rows.length?(rows.reduce(function(s,r){return s+r.cards},0)/rows.length).toFixed(1):'0';
+  $('#tSum').innerHTML='<div><b>'+rows.length+'</b><span>登入過的學生</span></div><div><b>'+act.length+'</b><span>已開始測驗</span></div><div><b>'+(avg===null?'–':avg+'%')+'</b><span>平均正確率</span></div><div><b>'+avgCards+'</b><span>平均記住閃卡（共 '+CARDS.length+' 張）</span></div>';
+  rows.sort(function(a,b){var x=a[sortKey],y=b[sortKey];if(typeof x==='string')return x.localeCompare(y)*sortDir;return (x-y)*sortDir});
+  var cols=[['id','學號'],['last','最後上線'],['answered','已答題數'],['pct','正確率'],['cards','閃卡']];
+  var th=cols.map(function(c){return '<th><button class="sortb" data-k="'+c[0]+'" type="button">'+c[1]+(sortKey===c[0]?(sortDir>0?' ▲':' ▼'):'')+'</button></th>'}).join('');
+  var body=rows.length?rows.map(function(r){
+    return '<tr><td>'+esc(r.id)+'</td><td>'+esc(fmtTime(r.last))+'</td><td class="num">'+r.answered+' / '+QS.length+'</td><td class="num">'+(r.pct<0?'–':'<span class="mbar"><i style="width:'+r.pct+'%"></i></span><span'+(r.pct<60?' class="low"':'')+'>'+r.pct+'%</span>')+'</td><td class="num">'+r.cards+' / '+CARDS.length+'</td></tr>';
+  }).join(''):'<tr><td colspan="5">還沒有學生登入。</td></tr>';
+  $('#tTable').innerHTML='<tr>'+th+'</tr>'+body;
+  var miss={};
+  rows.forEach(function(r){Object.keys(r.q).forEach(function(k){var m=miss[k]||(miss[k]={w:0,t:0});m.t++;if(r.q[k]===0)m.w++})});
+  var top=Object.keys(miss).filter(function(k){return miss[k].w>0&&QS[k]}).sort(function(a,b){return miss[b].w/miss[b].t-miss[a].w/miss[a].t||miss[b].w-miss[a].w}).slice(0,10);
+  $('#tMiss').innerHTML=top.length?top.map(function(k){var m=miss[k];return '<div class="missrow"><span>'+esc(QS[k].text)+'</span><span>'+m.w+' / '+m.t+' 人答錯</span></div>'}).join(''):'<p class="empty">目前沒有答錯紀錄。</p>';
+}
+$('#tTable').addEventListener('click',function(e){
+  var b=e.target.closest('[data-k]');if(!b)return;var k=b.dataset.k;
+  if(sortKey===k)sortDir=-sortDir;else{sortKey=k;sortDir=1}renderTeacher();
+});
+function csvCell(v){var s=String(v);if(/^[=+\-@]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"'}
+$('#tCsv').addEventListener('click',function(){
+  var lines=[['學號','最後上線','已答題數','答對題數','正確率%','記住閃卡']].concat(teacherRows().map(function(r){return [r.id,fmtTime(r.last),r.answered,r.correct,r.pct<0?'':r.pct,r.cards]}));
+  var blob=new Blob(['﻿'+lines.map(function(l){return l.map(csvCell).join(',')}).join('\r\n')],{type:'text/csv;charset=utf-8'});
+  var url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='網路服務進度.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url)},1000);
+});
+
+/* ---------- init ---------- */
+renderSearch();renderAddr();renderMailbox();
+var savedId='';try{savedId=localStorage.getItem('net10-sid')||''}catch(e){}
+if(VALID.test(savedId))enterStudent(savedId);else show('login');
+route();
+})();
+</script>
+</body>
+</html>
